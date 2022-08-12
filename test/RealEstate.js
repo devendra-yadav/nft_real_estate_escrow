@@ -16,13 +16,19 @@ describe("RealEstate",()=>{
         let deployer = accounts[0];
         let seller = accounts[1];
         let buyer = accounts[2];
+        let lender = accounts[3];
+        let verifier = accounts[4];
         
+        const purchaseAmount = ether(100);
+        const downpaymentAmount = ether(20);
 
         const RealEstate = await ethers.getContractFactory("RealEstate");
         const Escrow = await ethers.getContractFactory("Escrow")
 
         const realEstate = await RealEstate.deploy();
-        const escrow = await Escrow.deploy(realEstate.address);
+        const escrow = await Escrow.deploy(realEstate.address,0,seller.address, buyer.address,lender.address, verifier.address, purchaseAmount, downpaymentAmount);
+
+        
 
         await realEstate.deployed();
         await escrow.deployed();
@@ -31,12 +37,12 @@ describe("RealEstate",()=>{
         console.log(`Escrow deployed at ${escrow.address}`)
         console.log(`Deployer : ${deployer.address}. seller : ${seller.address}. Buyer : ${buyer.address}`)
 
-        return {realEstate, escrow, deployer, seller, buyer}
+        return {realEstate, escrow, deployer, seller, buyer, lender, verifier, purchaseAmount, downpaymentAmount}
 
     }
 
     it("Seller's property successfully minted.", async ()=>{
-        const {realEstate, escrow, deployer, seller, buyer} = await loadFixture(contractDeployment);
+        const {realEstate, escrow, deployer, seller, buyer, lender, verifier, purchaseAmount, downpaymentAmount} = await loadFixture(contractDeployment);
         let tokenUri="https://ipfs.io/ipfs/QmP8Ug8aTcr4pBRJ223HGJ6ynYceuFjqUyC5j1LtkkUcRJ?filename=puducherryHouse.json";
         realEstate.safeMint(seller.address, tokenUri)
 
@@ -49,7 +55,7 @@ describe("RealEstate",()=>{
 
     it("Property NFT successfully transfered from seller to buyer", async ()=>{
 
-        const {realEstate, escrow, deployer, seller, buyer} = await loadFixture(contractDeployment);
+        const {realEstate, escrow, deployer, seller, buyer, lender, verifier, purchaseAmount,downpaymentAmount } = await loadFixture(contractDeployment);
 
         console.log("going to mint an nft")
         //Let mint a token first
@@ -57,8 +63,7 @@ describe("RealEstate",()=>{
         realEstate.safeMint(seller.address, tokenUri)
 
         let nftId=0;
-        let purchaseAmount=ether(100);
-        let downpaymentAmount=ether(20);
+        
                  
         expect(await realEstate.tokenURI(nftId)).to.equal(tokenUri);
         expect(await realEstate.ownerOf(nftId)).to.equal(seller.address);
@@ -66,17 +71,11 @@ describe("RealEstate",()=>{
         //Seller should approve the deployer to transfer nft to buyer
         await realEstate.connect(seller).approve(escrow.address, nftId);
 
-        //set purchase amount
-        await escrow.setPurchaseAmount(purchaseAmount);
-
-        //set down paymanet amount
-        await escrow.setDownPaymentAmount(downpaymentAmount);
-        
         
         console.log(`purchase amount : ${ethers.utils.formatEther(purchaseAmount)} downpayment is ${ethers.utils.formatEther(downpaymentAmount)}`);
 
         //deposit downpayment into the escrow contract
-        await escrow.connect(buyer).depositDownPayment({value : ether(30) });
+        await escrow.connect(buyer).depositDownPayment({value : downpaymentAmount });
 
         //get balance of the contact
         let balance = await escrow.getBalance();
@@ -94,7 +93,7 @@ describe("RealEstate",()=>{
 
          expect(await realEstate.ownerOf(nftId)).to.equal(seller.address);
 
-         await escrow.transferRealEstateProperty(nftId, seller.address, buyer.address);
+         await escrow.transferRealEstateProperty();
          
 
          console.log(`After sale owner of NFT ${nftId} is ${await realEstate.ownerOf(nftId)}`)

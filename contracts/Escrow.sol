@@ -15,6 +15,15 @@ contract Escrow {
     //Contract address for the NFT real estate
     address public nftContractAddress;
 
+    //token id of the nft real estate
+    uint256 nftId;
+
+    //address of the buyer
+    address public buyer;
+
+    //address of the seller
+    address public seller;
+
     //address who provide the loan to the buyer
     address public lender;
 
@@ -31,12 +40,21 @@ contract Escrow {
     uint256 public leftPaymentAmount;
 
     modifier onlyOwner() {
-        require(owner == msg.sender, "Only owner can run this function");
+        require(owner == msg.sender, "Only contract owner can run this function");
         _;
     }
 
-    constructor(address _nftContractAddress) {
+    constructor(address _nftContractAddress, uint256 _nftId, address _seller, address _buyer, 
+        address _lender, address _verifier, uint256 _purchaseAmount, uint256 _downPaymentAmount) {
         nftContractAddress = _nftContractAddress;
+        nftId = _nftId;
+        seller = _seller;
+        buyer = _buyer;
+        lender = _lender;
+        verifier = _verifier;
+        purchaseAmount = _purchaseAmount;
+        downPaymentAmount = _downPaymentAmount;
+        leftPaymentAmount = _purchaseAmount;
         owner = msg.sender;
     }
 
@@ -46,33 +64,32 @@ contract Escrow {
      */
     function depositDownPayment() public payable{
         require(msg.value >= downPaymentAmount, "Downpayment amount is not enough");
+        require(msg.sender == buyer, "Buyer should make the downpayment");
+
         leftPaymentAmount = purchaseAmount - msg.value;
     }
 
     /**
-     * @dev this function will do the nft transfer from seller to buyer
-     * @param propertyNftId nft id of the real estate property
-     * @param seller address of the seller
-     * @param buyer address of the buyer
+     * @dev this function is to do the final nft transfer from seller to buyer
      */
-    function transferRealEstateProperty(uint256 propertyNftId, address seller, address buyer) public {
-        (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, propertyNftId);
+    function transferRealEstateProperty() public {
+        (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, nftId);
     }
 
     /**
-     * @dev this function sets the purchase amount of the nft
+     * @dev this function sets the purchase amount of the nft in case of need for overriding the original value
      * @param _purchaseAmount selling price of the nft in ethers
      */
-    function setPurchaseAmount(uint256 _purchaseAmount) public {
+    function setPurchaseAmount(uint256 _purchaseAmount) public onlyOwner{
         require(_purchaseAmount>0, "Purchase amount should be greater than 0");
         purchaseAmount=_purchaseAmount;        
     }
 
     /**
-     * @dev this function sets the downpayment for the purchase of the nft
+     * @dev this function sets the downpayment for the purchase of the nft in case of the need for overriding the original value
      * @param _downPaymentAmount downpayment in ethers
      */
-    function setDownPaymentAmount(uint256 _downPaymentAmount) public {
+    function setDownPaymentAmount(uint256 _downPaymentAmount) public onlyOwner{
         require(_downPaymentAmount>0, "Downpayment amount should be greater than 0");
         downPaymentAmount=_downPaymentAmount;
         
