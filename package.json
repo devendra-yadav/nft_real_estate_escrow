@@ -1,0 +1,34 @@
+{
+  "name": "nft_real_estate_escrow",
+  "version": "1.0.0",
+  "description": "NFT Real Estate Escrow",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devendra-yadav/nft_real_estate_escrow.git"
+  },
+  "keywords": [
+    "NFT",
+    "SOLIDITY",
+    "Hardhat",
+    "Javascript",
+    "RealEstate",
+    "Escrow"
+  ],
+  "author": "devendra.yadav@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devendra-yadav/nft_real_estate_escrow/issues"
+  },
+  "homepage": "https://github.com/devendra-yadav/nft_real_estate_escrow#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@openzeppelin/contracts": "^4.7.3",
+    "chai": "^4.3.6",
+    "hardhat": "^2.10.1",
+    "mocha": "^10.0.0"
+  }
+}
