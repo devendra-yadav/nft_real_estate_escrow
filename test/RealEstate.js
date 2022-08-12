@@ -56,6 +56,7 @@ describe("RealEstate",()=>{
     it("Property NFT successfully transfered from seller to buyer", async ()=>{
 
         const {realEstate, escrow, deployer, seller, buyer, lender, verifier, purchaseAmount,downpaymentAmount } = await loadFixture(contractDeployment);
+        
 
         console.log("going to mint an nft")
         //Let mint a token first
@@ -64,7 +65,6 @@ describe("RealEstate",()=>{
 
         let nftId=0;
         
-                 
         expect(await realEstate.tokenURI(nftId)).to.equal(tokenUri);
         expect(await realEstate.ownerOf(nftId)).to.equal(seller.address);
 
@@ -91,6 +91,26 @@ describe("RealEstate",()=>{
 
         console.log(`inspection status after : ${await escrow.inspectionStatus()}`)
 
+        //Buyer to provide approval
+        await escrow.connect(buyer).provideApproval(true);
+
+        //Seller to provide approval
+        await escrow.connect(seller).provideApproval(true);
+
+       
+
+        //Lender to pay left amount
+        await escrow.connect(lender).depositRemainingAmount({value: ether(80)});
+        console.log(`Lender did the payment`);
+        
+        leftAmount = await escrow.leftPaymentAmount();
+        console.log(`Left payment : ${ethers.utils.formatEther(leftAmount)}`);
+
+        //Lender  to provide approval
+         await escrow.connect(lender).provideApproval(true);
+
+         console.log("All approvals given (buyer, seller and lender).")
+
         //Start transfer 
 
          console.log(`Buyer : ${buyer.address} and seller is ${seller.address}`);
@@ -103,7 +123,11 @@ describe("RealEstate",()=>{
          
 
          console.log(`After sale owner of NFT ${nftId} is ${await realEstate.ownerOf(nftId)}`)
+         
+         //console.log(`Seller Balance : ${seller.balance}. Buyer Balance : ${buyer.balance} lender Balance : ${lender.balance}`)
+         //console.log(`Seller Balance : ${ethers.getBalance(seller.address)}.`)
          expect(await realEstate.ownerOf(nftId)).to.equal(buyer.address);
+
 
     })
 

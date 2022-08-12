@@ -25,6 +25,8 @@ contract Escrow {
     uint256 public purchaseAmount;
     uint256 public leftPaymentAmount;
 
+    mapping(address=>bool) public approvals;
+
     modifier onlyOwner() {
         require(owner == msg.sender, "Only contract owner can run this function");
         _;
@@ -68,7 +70,28 @@ contract Escrow {
      */
     function transferRealEstateProperty() public onlyOwner{
         require(inspectionStatus == InspectionStatus.PASSED, "Inspection status must be PASSED");
+
+        require(approvals[buyer] == true, "Must be approved by Buyer");
+        require(approvals[seller] == true, "Must be approved by Seller");
+        require(approvals[lender] == true, "Must be approved by Lender");
+
+        require(leftPaymentAmount==0, "Some payment still left.");
+
+        require(address(this).balance == purchaseAmount, "Not enough balance");
+
+        (bool res,) = payable(seller).call{value : address(this).balance}("");
+        require(res);
+
         (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, nftId);
+    }
+
+    /**
+     * @dev this function is to give approval to the deal. 
+     * whoever calls this function. his approval will be set accordingly
+     * @param approval true/false value
+     */
+    function provideApproval(bool approval) public {
+        approvals[msg.sender] = approval;
     }
 
     /**
@@ -78,6 +101,16 @@ contract Escrow {
     function depositDownPayment() public payable onlyBuyer{
         require(msg.value >= downPaymentAmount, "Downpayment amount is not enough");
         leftPaymentAmount = purchaseAmount - msg.value;
+    }
+
+    /**
+     * @dev this function is to make the remaining amount to purchase the nft
+     */
+    function depositRemainingAmount() public payable{
+        require(leftPaymentAmount>0, "Nothing left to pay. All payments done");
+        require(msg.value > 0, "Amount should be greater than 0");
+        require(msg.value <= leftPaymentAmount, "Amount is more than required.");
+        leftPaymentAmount = leftPaymentAmount - msg.value;
     }
 
     /**
@@ -106,6 +139,7 @@ contract Escrow {
         
     }
 
+    
     /**
      * @dev get ETH balance of the contract
      * @return balance balance in ethers
