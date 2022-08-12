@@ -84,6 +84,12 @@ describe("RealEstate",()=>{
         let leftAmount = await escrow.leftPaymentAmount();
         console.log(`Left payment : ${ethers.utils.formatEther(leftAmount)}`);
 
+        console.log(`inspection status before : ${await escrow.inspectionStatus()}`)
+        
+        //Do the inspection adn update inspection status
+        await escrow.connect(verifier).updateInspectionStatus(1);
+
+        console.log(`inspection status after : ${await escrow.inspectionStatus()}`)
 
         //Start transfer 
 

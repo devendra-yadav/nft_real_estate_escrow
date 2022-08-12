@@ -9,39 +9,43 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
  */
 contract Escrow {
 
-    //address of owner of this contract
     address public owner;
 
-    //Contract address for the NFT real estate
     address public nftContractAddress;
-
-    //token id of the nft real estate
     uint256 nftId;
 
-    //address of the buyer
     address public buyer;
-
-    //address of the seller
     address public seller;
-
-    //address who provide the loan to the buyer
     address public lender;
 
-    //address who verifies the nft real estate sale
+    //verifier will do the inspection of the property and provide the InspectionStatus
     address public verifier;
 
-    //Actual downpayment amount calculated by a function below based on downPaymentPercentage
     uint256 public downPaymentAmount;
-    
-    //Purchase amount of the real estate nft
     uint256 public purchaseAmount;
-
-    //Left payment amount to buy the nft real estate
     uint256 public leftPaymentAmount;
 
     modifier onlyOwner() {
         require(owner == msg.sender, "Only contract owner can run this function");
         _;
+    }
+
+    modifier onlyBuyer(){
+        require(msg.sender == buyer, "Only BUYER can make the downpayment");
+        _;
+    }
+
+    modifier onlyVerifier(){
+        require(verifier == msg.sender,"Only VERIFIER can change the inspection status");
+        _;
+    }
+
+    InspectionStatus public inspectionStatus;
+
+    enum InspectionStatus {
+        INITIATED,
+        PASSED,
+        FAILED
     }
 
     constructor(address _nftContractAddress, uint256 _nftId, address _seller, address _buyer, 
@@ -55,25 +59,32 @@ contract Escrow {
         purchaseAmount = _purchaseAmount;
         downPaymentAmount = _downPaymentAmount;
         leftPaymentAmount = _purchaseAmount;
+        inspectionStatus = InspectionStatus.INITIATED;
         owner = msg.sender;
+    }
+
+    /**
+     * @dev this function is to do the final nft transfer from seller to buyer
+     */
+    function transferRealEstateProperty() public onlyOwner{
+        require(inspectionStatus == InspectionStatus.PASSED, "Inspection status must be PASSED");
+        (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, nftId);
     }
 
     /**
      * @dev this function is to make down payment.
      * it will reduce that amount from the total purchase amount
      */
-    function depositDownPayment() public payable{
+    function depositDownPayment() public payable onlyBuyer{
         require(msg.value >= downPaymentAmount, "Downpayment amount is not enough");
-        require(msg.sender == buyer, "Buyer should make the downpayment");
-
         leftPaymentAmount = purchaseAmount - msg.value;
     }
 
     /**
-     * @dev this function is to do the final nft transfer from seller to buyer
+     * @dev update the inspection status. Only verifier can do this
      */
-    function transferRealEstateProperty() public {
-        (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, nftId);
+    function updateInspectionStatus(InspectionStatus _status) public onlyVerifier{
+        inspectionStatus = _status;
     }
 
     /**
