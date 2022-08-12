@@ -1,8 +1,11 @@
 
-
 const {loadFixture} = require("@nomicfoundation/hardhat-network-helpers")
 const {ethers} = require("hardhat")
 const {expect} = require("chai")
+
+const ether = (n)=>{
+    return ethers.utils.parseEther(n.toString())
+}
 
 describe("RealEstate",()=>{
 
@@ -54,12 +57,34 @@ describe("RealEstate",()=>{
         realEstate.safeMint(seller.address, tokenUri)
 
         let nftId=0;
-        
+        let purchaseAmount=ether(100);
+        let downpaymentAmount=ether(20);
+                 
         expect(await realEstate.tokenURI(nftId)).to.equal(tokenUri);
         expect(await realEstate.ownerOf(nftId)).to.equal(seller.address);
 
         //Seller should approve the deployer to transfer nft to buyer
         await realEstate.connect(seller).approve(escrow.address, nftId);
+
+        //set purchase amount
+        await escrow.setPurchaseAmount(purchaseAmount);
+
+        //set down paymanet amount
+        await escrow.setDownPaymentAmount(downpaymentAmount);
+        
+        
+        console.log(`purchase amount : ${ethers.utils.formatEther(purchaseAmount)} downpayment is ${ethers.utils.formatEther(downpaymentAmount)}`);
+
+        //deposit downpayment into the escrow contract
+        await escrow.connect(buyer).depositDownPayment({value : ether(30) });
+
+        //get balance of the contact
+        let balance = await escrow.getBalance();
+        console.log(`Escrow contract balance is ${ethers.utils.formatEther(balance)}`);
+
+        let leftAmount = await escrow.leftPaymentAmount();
+        console.log(`Left payment : ${ethers.utils.formatEther(leftAmount)}`);
+
 
         //Start transfer 
 
