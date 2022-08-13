@@ -6,6 +6,9 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+/**
+ * @dev NFT for a real estate property
+ */
 contract RealEstate is ERC721, ERC721URIStorage, Ownable {
     using Counters for Counters.Counter;
 
@@ -13,7 +16,8 @@ contract RealEstate is ERC721, ERC721URIStorage, Ownable {
 
     constructor() ERC721("RealEstate", "REAL") {}
 
-    //Map for address with array of token IDs
+    //Map of address containing the NFT token IDs array
+    //this can be used to get all nft ids for a given address
     mapping(address=>uint256[]) private propertyOwnersMap;
 
     function safeMint(address to, string memory uri) public onlyOwner {
@@ -29,7 +33,7 @@ contract RealEstate is ERC721, ERC721URIStorage, Ownable {
 
     }
 
-    // The following functions are overrides required by Solidity.
+    // The following 2 functions are overrides required by Solidity.
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
