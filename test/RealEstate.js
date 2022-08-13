@@ -56,7 +56,11 @@ describe("RealEstate",()=>{
     it("Property NFT successfully transfered from seller to buyer", async ()=>{
 
         const {realEstate, escrow, deployer, seller, buyer, lender, verifier, purchaseAmount,downpaymentAmount } = await loadFixture(contractDeployment);
-        
+        sellerBalance = ethers.utils.formatEther(await escrow.getBalanceOf(seller.address))
+         buyerBalance = ethers.utils.formatEther(await escrow.getBalanceOf(buyer.address))
+         lenderBalance = ethers.utils.formatEther(await escrow.getBalanceOf(lender.address))
+    
+         console.log(`Seller Balance : ${sellerBalance}. Buyer Balance : ${buyerBalance} lender Balance : ${lenderBalance}`)
 
         console.log("going to mint an nft")
         //Let mint a token first
@@ -124,8 +128,12 @@ describe("RealEstate",()=>{
 
          console.log(`After sale owner of NFT ${nftId} is ${await realEstate.ownerOf(nftId)}`)
          
-         //console.log(`Seller Balance : ${seller.balance}. Buyer Balance : ${buyer.balance} lender Balance : ${lender.balance}`)
-         //console.log(`Seller Balance : ${ethers.getBalance(seller.address)}.`)
+         sellerBalance = ethers.utils.formatEther(await escrow.getBalanceOf(seller.address))
+         buyerBalance = ethers.utils.formatEther(await escrow.getBalanceOf(buyer.address))
+         lenderBalance = ethers.utils.formatEther(await escrow.getBalanceOf(lender.address))
+    
+         console.log(`Seller Balance : ${sellerBalance}. Buyer Balance : ${buyerBalance} lender Balance : ${lenderBalance}`)
+        
          expect(await realEstate.ownerOf(nftId)).to.equal(buyer.address);
 
 

@@ -147,4 +147,12 @@ contract Escrow {
     function getBalance() public view returns(uint256 balance){
         return address(this).balance;
     }
+
+    /**
+     * @dev returns balance of given wallet address
+     * @return balance balance of the wallet
+     */
+    function getBalanceOf(address walletAddress) public view returns(uint256 balance){
+        return walletAddress.balance;
+    }
 }
