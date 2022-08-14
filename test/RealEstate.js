@@ -134,6 +134,10 @@ describe("RealEstate",()=>{
     
          console.log(`Seller Balance : ${sellerBalance}. Buyer Balance : ${buyerBalance} lender Balance : ${lenderBalance}`)
         
+         //ethers.js also can fetch balance. following is the way to do it
+        //  const tempBalance = await ethers.provider.getBalance(seller.address);
+        //  console.log(`temp balance is ${ethers.utils.formatEther(tempBalance)}`)
+
          expect(await realEstate.ownerOf(nftId)).to.equal(buyer.address);
 
 
