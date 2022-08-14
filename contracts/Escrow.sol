@@ -50,6 +50,16 @@ contract Escrow {
         FAILED
     }
 
+    event RealEstateNFTTransferred(address from, address to, uint256 propertyNftId);
+
+    event DownPaymentDone(address from, uint256 propertyNftId, uint256 amount);
+
+    event ApprovalGiven(address from, uint256 propertyNftId);
+
+    event LeftPaymentDone(address from, uint256 propertyNftId, uint256 amount);
+
+    event InspectionStatusUpdated(uint256 propertyNftId, InspectionStatus status);
+
     constructor(address _nftContractAddress, uint256 _nftId, address _seller, address _buyer, 
         address _lender, address _verifier, uint256 _purchaseAmount, uint256 _downPaymentAmount) {
         nftContractAddress = _nftContractAddress;
@@ -83,6 +93,8 @@ contract Escrow {
         require(res);
 
         (IERC721)(nftContractAddress).safeTransferFrom(seller, buyer, nftId);
+
+        emit RealEstateNFTTransferred(seller, buyer, nftId);
     }
 
     /**
@@ -92,6 +104,7 @@ contract Escrow {
      */
     function provideApproval(bool approval) public {
         approvals[msg.sender] = approval;
+        emit ApprovalGiven(msg.sender, nftId);
     }
 
     /**
@@ -101,6 +114,8 @@ contract Escrow {
     function depositDownPayment() public payable onlyBuyer{
         require(msg.value >= downPaymentAmount, "Downpayment amount is not enough");
         leftPaymentAmount = purchaseAmount - msg.value;
+
+        emit DownPaymentDone(msg.sender, nftId, msg.value);
     }
 
     /**
@@ -111,13 +126,17 @@ contract Escrow {
         require(msg.value > 0, "Amount should be greater than 0");
         require(msg.value <= leftPaymentAmount, "Amount is more than required.");
         leftPaymentAmount = leftPaymentAmount - msg.value;
+
+        emit LeftPaymentDone(msg.sender, nftId, msg.value);
     }
 
     /**
      * @dev update the inspection status. Only verifier can do this
      */
     function updateInspectionStatus(InspectionStatus _status) public onlyVerifier{
+        
         inspectionStatus = _status;
+        emit InspectionStatusUpdated(nftId, _status);
     }
 
     /**
